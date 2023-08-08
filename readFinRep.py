@@ -40,7 +40,8 @@ def readBalanceSheet(stock,year,quarter):
         currentRatio=newAsset/newLiability
         #速動比率
         quickRatio=(newAsset-newInventory-newPrepayment)/newLiability
-        return [f'{year}Q{quarter}',f'{currentRatio:.2f}',f'{quickRatio:.2f}']
+        #return [f'{year}Q{quarter}',f'{currentRatio:.2f}',f'{quickRatio:.2f}']
+        return [f'{currentRatio:.2f}',f'{quickRatio:.2f}']
     
 #讀取綜合損益表
 def readComprehensiveIncome(stock,year,quarter):
@@ -73,7 +74,8 @@ def readComprehensiveIncome(stock,year,quarter):
         operatingIncome=(newRevenue-newCosts-newExpenses)/newRevenue*100
         #淨利率
         netIncome=(newRevenue-newCosts-newExpenses+newNonOp-newTax)/newRevenue*100
-        return [f'{year}Q{quarter}',f'{grossProfit:.2f}',f'{operatingIncome:.2f}',f'{netIncome:.2f}',f'{newEPS:.2f}']
+        #return [f'{year}Q{quarter}',f'{grossProfit:.2f}',f'{operatingIncome:.2f}',f'{netIncome:.2f}',f'{newEPS:.2f}']
+        return [f'{grossProfit:.2f}',f'{operatingIncome:.2f}',f'{netIncome:.2f}',f'{newEPS:.2f}']
 
 #讀取現金流量表
 def readCashFlows(stock,year,quarter):
@@ -101,60 +103,42 @@ def readCashFlows(stock,year,quarter):
         inveRatio=newInve/tolCF*100
         #籌資現金流比例
         finaRatio=newFina/tolCF*100
-        return [f'{year}Q{quarter}',f'{operRatio:.2f}',f'{inveRatio:.2f}',f'{finaRatio:.2f}']
+        #return [f'{year}Q{quarter}',f'{operRatio:.2f}',f'{inveRatio:.2f}',f'{finaRatio:.2f}']
+        return [f'{operRatio:.2f}',f'{inveRatio:.2f}',f'{finaRatio:.2f}']
     
-#整理各季度流動比率、速動比率
-def writeBalanceSheetCollection(stock,years,quarters):
-    collBSRatio=[]
-    collBScolumn=[]
-    for i in range(0,4):
-        newBSRatio=readBalanceSheet(stock, years[i], quarters[i])
-        collBScolumn.append(newBSRatio[0])
-        collBSRatio.append(newBSRatio)
-    #各季度流動比率、速動比率集成表輸出csv
-    tolBSRatio=pd.DataFrame(collBSRatio).transpose()
-    tolBSRatio.columns=collBScolumn
-    tolBSRatio=tolBSRatio.drop(0)
-    tolBSRatio.to_csv(f'{stock}/{stock}-BSCollection.csv',encoding='utf-8-sig',index=False)
-    print(f'Save {stock}-BSCollection.csv')
-    
-#整理各季度毛利率、利益率、淨利率、EPS
-def writeComprehensiveIncomeCollection(stock,years,quarters):
-    collCIRatio=[]
-    collCIcolumn=[]
-    for i in range(0,4):
-        newCIRatio=readComprehensiveIncome(stock, years[i], quarters[i])
-        collCIcolumn.append(newCIRatio[0])
-        collCIRatio.append(newCIRatio)
-    #各季度毛利率、利益率、淨利率、EPS輸出csv
-    tolCIRatio=pd.DataFrame(collCIRatio).transpose()
-    tolCIRatio.columns=collCIcolumn
-    tolCIRatio=tolCIRatio.drop(0)
-    tolCIRatio.to_csv(f'{stock}/{stock}-CICollection.csv',encoding='utf-8-sig',index=False)
-    print(f'Save {stock}-CICollection.csv')
 
-#整理各季度營業、投資、籌資現金流之比例
-def writeCashFlowCollection(stock,years,quarters):
-    collCFRatio=[]
-    collCFcolumn=[]
+
+def writeFinacialReports(stock, years, quarters):
+    
+    frdata=[["","流動比率","速動比率","毛利率%","利益率%","淨利率%","EPS","營業現金流%","投資現金流%","籌資現金流%"]]
     for i in range(0,4):
+        frrow=[]
+        frnumber=f'{years[i]}Q{quarters[i]}'
+        frrow.append(frnumber)
+        newBSRatio=readBalanceSheet(stock, years[i], quarters[i])
+        for bsdata in newBSRatio:
+            frrow.append(bsdata)
+        
+        newCIRatio=readComprehensiveIncome(stock, years[i], quarters[i])
+        for cidata in newCIRatio:
+            frrow.append(cidata)
+        
         newCFRatio=readCashFlows(stock, years[i], quarters[i])
-        collCFcolumn.append(newCFRatio[0])
-        collCFRatio.append(newCFRatio)
-    #各季度營業、投資、籌資現金流之比例輸出csv
-    tolCFRatio=pd.DataFrame(collCFRatio).transpose()
-    tolCFRatio.columns=collCFcolumn
-    tolCFRatio=tolCFRatio.drop(0)
-    tolCFRatio.to_csv(f'{stock}/{stock}-CFCollection.csv',encoding='utf-8-sig',index=False)
-    print(f'Save {stock}-CFCollection.csv')
+        for cfdata in newCFRatio:
+            frrow.append(cfdata)
+        
+        frdata.append(frrow)
+    
+    #各季度流動比率、速動比率集成表輸出csv
+    frtable=pd.DataFrame(frdata).transpose()
+    frtable.columns=frtable.iloc[0]
+    frtable=frtable.drop(0)
+    print(frtable)
+    frtable.to_csv(f'{stock}/{stock}-FRCollection.csv',encoding='utf-8-sig',index=False)
 
 #讀取財報並輸出相關指標
-def readFinRep(stock_codes):
-    years=["2023","2022","2022","2022"]
-    quarters=["1","4","3","2"]
-    for stock in stock_codes:
-        writeBalanceSheetCollection(stock, years, quarters)
-        writeComprehensiveIncomeCollection(stock, years, quarters)
-        writeCashFlowCollection(stock, years, quarters)
-    
-    
+years=["2023","2022","2022","2022"]
+quarters=["1","4","3","2"]
+stock_codes=["6697","6752","6865"]
+for stock in stock_codes:
+    writeFinacialReports(stock, years, quarters)
